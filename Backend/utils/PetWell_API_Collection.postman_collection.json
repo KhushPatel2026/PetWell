@@ -1,0 +1,764 @@
+{
+  "info": {
+    "name": "PetWell API Collection",
+    "description": "Comprehensive API collection for PetWell backend, covering authentication, pet management, business operations, vaccines, documents, timeline, teams, messages, and profile management. Created for frontend integration.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"John Doe\",\"email\":\"john@example.com\",\"password\":\"Password123\",\"role\":\"individual\",\"location\":\"New York\",\"phone\":\"1234567890\",\"inviteCode\":\"optional-invite-code-for-sub-user\"}"
+            },
+            "url": "{{BASE_URL}}/api/auth/register",
+            "description": "Register a new user (individual, admin, or sub-user). Controller: auth.controller.register. Returns JWT token."
+          },
+          "response": [
+            { "name": "Success", "status": "OK", "code": 200, "body": "{\"status\":\"ok\",\"token\":\"<jwt-token>\"}" },
+            { "name": "Error", "status": "Bad Request", "code": 400, "body": "{\"error\":\"Invalid role\"}" }
+          ]
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\":\"john@example.com\",\"password\":\"Password123\"}"
+            },
+            "url": "{{BASE_URL}}/api/auth/login",
+            "description": "Login user and get JWT token. Controller: auth.controller.login."
+          },
+          "response": [
+            { "name": "Success", "status": "OK", "code": 200, "body": "{\"status\":\"ok\",\"token\":\"<jwt-token>\"}" },
+            { "name": "Error", "status": "Unauthorized", "code": 401, "body": "{\"error\":\"Invalid credentials\"}" }
+          ]
+        },
+        {
+          "name": "Verify Token",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "x-access-token", "value": "{{TOKEN}}" }
+            ],
+            "url": "{{BASE_URL}}/api/auth/verify-token",
+            "description": "Verify JWT token validity. Controller: auth.controller.verifyToken."
+          },
+          "response": [
+            { "name": "Success", "status": "OK", "code": 200, "body": "{\"status\":\"ok\",\"user\":{\"id\":\"<user-id>\",\"email\":\"john@example.com\",\"role\":\"individual\"}}" },
+            { "name": "Error", "status": "Unauthorized", "code": 401, "body": "{\"error\":\"No token provided\"}" }
+          ]
+        },
+        {
+          "name": "Google OAuth",
+          "request": {
+            "method": "GET",
+            "url": "{{BASE_URL}}/api/auth/google",
+            "description": "Initiate Google OAuth flow. Redirects to Google login page. Controller: passport.google."
+          }
+        },
+        {
+          "name": "Google OAuth Callback",
+          "request": {
+            "method": "GET",
+            "url": "{{BASE_URL}}/api/auth/google/callback",
+            "description": "Handle Google OAuth callback. Redirects to frontend with token. Controller: socialAuth.controller.handleGoogleCallback."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Pets",
+      "item": [
+        {
+          "name": "Create Pet",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "x-access-token", "value": "{{TOKEN}}" },
+              { "key": "Content-Type", "value": "multipart/form-data" }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "name", "value": "Max", "type": "text" },
+                { "key": "species", "value": "dog", "type": "text" },
+                { "key": "breed", "value": "Labrador Retriever", "type": "text" },
+                { "key": "age", "value": "3", "type": "text" },
+                { "key": "weight", "value": "25", "type": "text" },
+                { "key": "location", "value": "New York", "type": "text" },
+                { "key": "spayNeuter", "value": "neutered", "type": "text" },
+                { "key": "color", "value": "Yellow", "type": "text" },
+                { "key": "dateOfBirth", "value": "2022-01-01", "type": "text" },
+                { "key": "microchip", "value": "123456789", "type": "text" },
+                { "key": "notes", "value": "Friendly dog", "type": "text" },
+                { "key": "profilePicture", "type": "file", "src": "/path/to/image.jpg" }
+              ]
+            },
+            "url": "{{BASE_URL}}/api/pets",
+            "description": "Create a new pet profile (individual users only). Controller: pet.controller.createPet."
+          },
+          "response": [
+            { "name": "Success", "status": "OK", "code": 200, "body": "{\"status\":\"ok\",\"pet\":{...}}" },
+            { "name": "Error", "status": "Forbidden", "code": 403, "body": "{\"error\":\"Only individual users can create pet profiles\"}" }
+          ]
+        },
+        {
+          "name": "Get Pets",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "x-access-token", "value": "{{TOKEN}}" }
+            ],
+            "url": "{{BASE_URL}}/api/pets",
+            "description": "Retrieve all pets for the authenticated user. Controller: pet.controller.getPets."
+          },
+          "response": [
+            { "name": "Success", "status": "OK", "code": 200, "body": "{\"status\":\"ok\",\"pets\":[{...}]}" }
+          ]
+        },
+        {
+          "name": "Update Pet",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "x-access-token", "value": "{{TOKEN}}" },
+              { "key": "Content-Type", "value": "multipart/form-data" }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "name", "value": "Max Updated", "type": "text" },
+                { "key": "profilePicture", "type": "file", "src": "/path/to/new-image.jpg" }
+              ]
+            },
+            "url": "{{BASE_URL}}/api/pets/{{PET_ID}}",
+            "description": "Update a pet profile. Controller: pet.controller.updatePet."
+          },
+          "response": [
+            { "name": "Success", "status": "OK", "code": 200, "body": "{\"status\":\"ok\"}" },
+            { "name": "Error", "status": "Not Found", "code": 404, "body": "{\"error\":\"Pet not found\"}" }
+          ]
+        },
+        {
+          "name": "Transfer Pet",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "x-access-token", "value": "{{TOKEN}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"newOwnerEmail\":\"newowner@example.com\"}"
+            },
+            "url": "{{BASE_URL}}/api/pets/{{PET_ID}}/transfer",
+            "description": "Transfer pet ownership to another user. Controller: pet.controller.transferPet."
+          },
+          "response": [
+            { "name": "Success", "status": "OK", "code": 200, "body": "{\"status\":\"ok\"}" },
+            { "name": "Error", "status": "Not Found", "code": 404, "body": "{\"error\":\"New owner not found\"}" }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Business",
+      "item": [
+        {
+          "name": "Create Business",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "x-access-token", "value": "{{TOKEN}}" },
+              { "key": "Content-Type", "value": "multipart/form-data" }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "name", "value": "Pet Clinic", "type": "text" },
+                { "key": "email", "value": "clinic@example.com", "type": "text" },
+                { "key": "phone", "value": "1234567890", "type": "text" },
+                { "key": "website", "value": "https://petclinic.com", "type": "text" },
+                { "key": "socials", "value": "{\"instagram\":\"petclinic\",\"facebook\":\"petclinic\"}", "type": "text" },
+                { "key": "description", "value": "Veterinary services", "type": "text" },
+                { "key": "staff", "value": "[{\"name\":\"Dr. Smith\",\"role\":\"Vet\"}]", "type": "text" },
+                { "key": "profileImage", "type": "file", "src": "/path/to/image.jpg" }
+              ]
+            },
+            "url": "{{BASE_URL}}/api/business",
+            "description": "Create a business profile (admin users only). Controller: business.controller.createBusiness."
+          },
+          "response": [
+            { "name": "Success", "status": "OK", "code": 200, "body": "{\"status\":\"ok\",\"business\":{...}}" },
+            { "name": "Error", "status": "Forbidden", "code": 403, "body": "{\"error\":\"Only admin users can create businesses\"}" }
+          ]
+        },
+        {
+          "name": "Get Business",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "x-access-token", "value": "{{TOKEN}}" }
+            ],
+            "url": "{{BASE_URL}}/api/business",
+            "description": "Retrieve business details. Controller: business.controller.getBusiness."
+          },
+          "response": [
+            { "name": "Success", "status": "OK", "code": 200, "body": "{\"status\":\"ok\",\"business\":{...}}" },
+            { "name": "Error", "status": "Not Found", "code": 404, "body": "{\"error\":\"Business not found\"}" }
+          ]
+        },
+        {
+          "name": "Update Business",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "x-access-token", "value": "{{TOKEN}}" },
+              { "key": "Content-Type", "value": "multipart/form-data" }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "name", "value": "Updated Pet Clinic", "type": "text" },
+                { "key": "profileImage", "type": "file", "src": "/path/to/new-image.jpg" }
+              ]
+            },
+            "url": "{{BASE_URL}}/api/business",
+            "description": "Update business profile (admin users only). Controller: business.controller.updateBusiness."
+          },
+          "response": [
+            { "name": "Success", "status": "OK", "code": 200, "body": "{\"status\":\"ok\"}" },
+            { "name": "Error", "status": "Not Found", "code": 404, "body": "{\"error\":\"Business not found\"}" }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Vaccines",
+      "item": [
+        {
+          "name": "Create Vaccine",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "x-access-token", "value": "{{TOKEN}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"brand\":\"Pfizer\",\"preventative\":\"Rabies\",\"name\":\"Rabies Vaccine\",\"dateAdministered\":\"2025-01-01\",\"dateDue\":\"2026-01-01\",\"location\":\"<business-id>\",\"administeredBy\":\"Dr. Smith\",\"attestation\":true}"
+            },
+            "url": "{{BASE_URL}}/api/vaccines/{{PET_ID}}",
+            "description": "Add a vaccine record for a pet. Controller: vaccine.controller.createVaccine."
+          },
+          "response": [
+            { "name": "Success", "status": "OK", "code": 200, "body": "{\"status\":\"ok\",\"vaccine\":{...}}" },
+            { "name": "Error", "status": "Not Found", "code": 404, "body": "{\"error\":\"Pet not found\"}" }
+          ]
+        },
+        {
+          "name": "Upload Vaccine Document",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "x-access-token", "value": "{{TOKEN}}" },
+              { "key": "Content-Type", "value": "multipart/form-data" }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "document", "type": "file", "src": "/path/to/vaccine.pdf" }
+              ]
+            },
+            "url": "{{BASE_URL}}/api/vaccines/{{PET_ID}}/upload",
+            "description": "Upload a vaccine document for OCR processing. Controller: vaccine.controller.uploadVaccineDocument."
+          },
+          "response": [
+            { "name": "Success", "status": "OK", "code": 200, "body": "{\"status\":\"ok\",\"vaccine\":{...}}" },
+            { "name": "Error", "status": "Not Found", "code": 404, "body": "{\"error\":\"Pet not found\"}" }
+          ]
+        },
+        {
+          "name": "Get Vaccines",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "x-access-token", "value": "{{TOKEN}}" }
+            ],
+            "url": "{{BASE_URL}}/api/vaccines/{{PET_ID}}",
+            "description": "Retrieve vaccine records for a pet. Controller: vaccine.controller.getVaccines."
+          },
+          "response": [
+            { "name": "Success", "status": "OK", "code": 200, "body": "{\"status\":\"ok\",\"vaccines\":[{...}]}" }
+          ]
+        },
+        {
+          "name": "Update Vaccine",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "x-access-token", "value": "{{TOKEN}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"Updated Rabies Vaccine\",\"dateDue\":\"2026-02-01\"}"
+            },
+            "url": "{{BASE_URL}}/api/vaccines/{{VACCINE_ID}}",
+            "description": "Update a vaccine record (individual users only). Controller: vaccine.controller.updateVaccine."
+          },
+          "response": [
+            { "name": "Success", "status": "OK", "code": 200, "body": "{\"status\":\"ok\"}" },
+            { "name": "Error", "status": "Not Found", "code": 404, "body": "{\"error\":\"Vaccine not found or unauthorized\"}" }
+          ]
+        },
+        {
+          "name": "Download Vaccine PDF",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "x-access-token", "value": "{{TOKEN}}" }
+            ],
+            "url": "{{BASE_URL}}/api/vaccines/{{PET_ID}}/pdf",
+            "description": "Download a PDF of vaccine records for a pet. Controller: vaccine.controller.downloadVaccinePDF."
+          },
+          "response": [
+            { "name": "Success", "status": "OK", "code": 200, "body": "<binary-pdf-data>", "header": [
+              { "key": "Content-Type", "value": "application/pdf" },
+              { "key": "Content-Disposition", "value": "attachment; filename=<pet-name>_vaccines.pdf" }
+            ]}
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Documents",
+      "item": [
+        {
+          "name": "Upload Document",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "x-access-token", "value": "{{TOKEN}}" },
+              { "key": "Content-Type", "value": "multipart/form-data" }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "document", "type": "file", "src": "/path/to/document.pdf" },
+                { "key": "name", "value": "Health Certificate", "type": "text" },
+                { "key": "tags", "value": "[\"health\",\"certificate\"]", "type": "text" },
+                { "key": "staffId", "value": "staff123", "type": "text" }
+              ]
+            },
+            "url": "{{BASE_URL}}/api/documents/{{PET_ID}}",
+            "description": "Upload a document for a pet. Controller: document.controller.uploadDocument."
+          },
+          "response": [
+            { "name": "Success", "status": "OK", "code": 200, "body": "{\"status\":\"ok\",\"document\":{...}}" },
+            { "name": "Error", "status": "Not Found", "code": 404, "body": "{\"error\":\"Pet not found\"}" }
+          ]
+        },
+        {
+          "name": "Get Documents",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "x-access-token", "value": "{{TOKEN}}" }
+            ],
+            "url": "{{BASE_URL}}/api/documents/{{PET_ID}}",
+            "description": "Retrieve documents for a pet. Controller: document.controller.getDocuments."
+          },
+          "response": [
+            { "name": "Success", "status": "OK", "code": 200, "body": "{\"status\":\"ok\",\"documents\":[{...}]}" }
+          ]
+        },
+        {
+          "name": "Update Document",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "x-access-token", "value": "{{TOKEN}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"Updated Health Certificate\"}"
+            },
+            "url": "{{BASE_URL}}/api/documents/{{DOCUMENT_ID}}",
+            "description": "Rename a document. Controller: document.controller.updateDocument."
+          },
+          "response": [
+            { "name": "Success", "status": "OK", "code": 200, "body": "{\"status\":\"ok\"}" },
+            { "name": "Error", "status": "Not Found", "code": 404, "body": "{\"error\":\"Document not found or unauthorized\"}" }
+          ]
+        },
+        {
+          "name": "Get Document Preview",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "x-access-token", "value": "{{TOKEN}}" }
+            ],
+            "url": "{{BASE_URL}}/api/documents/{{DOCUMENT_ID}}/preview",
+            "description": "Get a signed URL and summary for a document. Controller: document.controller.getDocumentPreview."
+          },
+          "response": [
+            { "name": "Success", "status": "OK", "code": 200, "body": "{\"status\":\"ok\",\"url\":\"<signed-url>\",\"summary\":\"<document-summary>\"}" },
+            { "name": "Error", "status": "Not Found", "code": 404, "body": "{\"error\":\"Document not found\"}" }
+          ]
+        },
+        {
+          "name": "Email Document",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "x-access-token", "value": "{{TOKEN}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\":\"recipient@example.com\"}"
+            },
+            "url": "{{BASE_URL}}/api/documents/{{DOCUMENT_ID}}/email",
+            "description": "Email a document to a recipient. Controller: document.controller.emailDocument."
+          },
+          "response": [
+            { "name": "Success", "status": "OK", "code": 200, "body": "{\"status\":\"ok\"}" },
+            { "name": "Error", "status": "Not Found", "code": 404, "body": "{\"error\":\"Document not found\"}" }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Timeline",
+      "item": [
+        {
+          "name": "Create Timeline Point",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "x-access-token", "value": "{{TOKEN}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"type\":\"appointment\",\"text\":\"Vet visit scheduled\",\"teamId\":\"<business-id>\"}"
+            },
+            "url": "{{BASE_URL}}/api/timeline/{{PET_ID}}",
+            "description": "Add a timeline point for a pet. Controller: timeline.controller.createTimelinePoint."
+          },
+          "response": [
+            { "name": "Success", "status": "OK", "code": 200, "body": "{\"status\":\"ok\",\"timeline\":{...}}" },
+            { "name": "Error", "status": "Not Found", "code": 404, "body": "{\"error\":\"Pet not found\"}" }
+          ]
+        },
+        {
+          "name": "Get Timeline",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "x-access-token", "value": "{{TOKEN}}" }
+            ],
+            "url": "{{BASE_URL}}/api/timeline/{{PET_ID}}?search=vet&type=appointment",
+            "description": "Retrieve timeline points for a pet, with optional search and type filters. Controller: timeline.controller.getTimeline."
+          },
+          "response": [
+            { "name": "Success", "status": "OK", "code": 200, "body": "{\"status\":\"ok\",\"timeline\":[{...}]}" }
+          ]
+        },
+        {
+          "name": "Hide Timeline Point",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "x-access-token", "value": "{{TOKEN}}" }
+            ],
+            "url": "{{BASE_URL}}/api/timeline/{{TIMELINE_ID}}/hide",
+            "description": "Hide a timeline point. Controller: timeline.controller.hideTimelinePoint."
+          },
+          "response": [
+            { "name": "Success", "status": "OK", "code": 200, "body": "{\"status\":\"ok\"}" },
+            { "name": "Error", "status": "Not Found", "code": 404, "body": "{\"error\":\"Timeline point not found\"}" }
+          ]
+        },
+        {
+          "name": "Delete Timeline Point",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "x-access-token", "value": "{{TOKEN}}" }
+            ],
+            "url": "{{BASE_URL}}/api/timeline/{{TIMELINE_ID}}",
+            "description": "Delete a timeline point. Controller: timeline.controller.deleteTimelinePoint."
+          },
+          "response": [
+            { "name": "Success", "status": "OK", "code": 200, "body": "{\"status\":\"ok\"}" },
+            { "name": "Error", "status": "Not Found", "code": 404, "body": "{\"error\":\"Timeline point not found\"}" }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Teams",
+      "item": [
+        {
+          "name": "Add Team",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "x-access-token", "value": "{{TOKEN}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\":\"clinic@example.com\"}"
+            },
+            "url": "{{BASE_URL}}/api/teams",
+            "description": "Add a business to the user's team. Controller: team.controller.addTeam."
+          },
+          "response": [
+            { "name": "Success", "status": "OK", "code": 200, "body": "{\"status\":\"ok\",\"team\":{...}}" },
+            { "name": "Error", "status": "Not Found", "code": 404, "body": "{\"error\":\"Business not found\"}" }
+          ]
+        },
+        {
+          "name": "Get Teams",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "x-access-token", "value": "{{TOKEN}}" }
+            ],
+            "url": "{{BASE_URL}}/api/teams",
+            "description": "Retrieve all teams for the user. Controller: team.controller.getTeams."
+          },
+          "response": [
+            { "name": "Success", "status": "OK", "code": 200, "body": "{\"status\":\"ok\",\"teams\":[{...}]}" }
+          ]
+        },
+        {
+          "name": "Delete Team",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "x-access-token", "value": "{{TOKEN}}" }
+            ],
+            "url": "{{BASE_URL}}/api/teams/{{TEAM_ID}}",
+            "description": "Remove a team. Controller: team.controller.deleteTeam."
+          },
+          "response": [
+            { "name": "Success", "status": "OK", "code": 200, "body": "{\"status\":\"ok\"}" },
+            { "name": "Error", "status": "Not Found", "code": 404, "body": "{\"error\":\"Team not found\"}" }
+          ]
+        },
+        {
+          "name": "Contact Team",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "x-access-token", "value": "{{TOKEN}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"message\":\"Please schedule an appointment.\"}"
+            },
+            "url": "{{BASE_URL}}/api/teams/{{TEAM_ID}}/contact",
+            "description": "Send a message to a team. Controller: team.controller.contactTeam."
+          },
+          "response": [
+            { "name": "Success", "status": "OK", "code": 200, "body": "{\"status\":\"ok\"}" },
+            { "name": "Error", "status": "Not Found", "code": 404, "body": "{\"error\":\"Team not found\"}" }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Messages",
+      "item": [
+        {
+          "name": "Create Message",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "x-access-token", "value": "{{TOKEN}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"fromStaff\":\"Dr. Smith\",\"templateId\":\"<template-id>\",\"content\":{\"shortText\":\"Appointment reminder\",\"longText\":\"Your pet's appointment is scheduled for tomorrow.\",\"date\":\"2025-06-14\",\"contactInfo\":\"1234567890\",\"link\":\"https://petclinic.com\"}}"
+            },
+            "url": "{{BASE_URL}}/api/messages/{{PET_ID}}",
+            "description": "Send a message to a pet owner (admin/sub-user only). Controller: message.controller.createMessage."
+          },
+          "response": [
+            { "name": "Success", "status": "OK", "code": 200, "body": "{\"status\":\"ok\",\"message\":{...}}" },
+            { "name": "Error", "status": "Forbidden", "code": 403, "body": "{\"error\":\"Unauthorized\"}" }
+          ]
+        },
+        {
+          "name": "Create Message Template",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "x-access-token", "value": "{{TOKEN}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"Appointment Reminder\",\"components\":{\"shortText\":\"Reminder\",\"longText\":\"Your appointment is scheduled.\",\"date\":true,\"contactInfo\":true,\"link\":true}}"
+            },
+            "url": "{{BASE_URL}}/api/messages/template",
+            "description": "Create a message template (enterprise plan only). Controller: message.controller.createTemplate."
+          },
+          "response": [
+            { "name": "Success", "status": "OK", "code": 200, "body": "{\"status\":\"ok\",\"template\":{...}}" },
+            { "name": "Error", "status": "Forbidden", "code": 403, "body": "{\"error\":\"Template creation requires enterprise plan\"}" }
+          ]
+        },
+        {
+          "name": "Get Messages",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "x-access-token", "value": "{{TOKEN}}" }
+            ],
+            "url": "{{BASE_URL}}/api/messages/{{PET_ID}}",
+            "description": "Retrieve messages for a pet. Controller: message.controller.getMessages."
+          },
+          "response": [
+            { "name": "Success", "status": "OK", "code": 200, "body": "{\"status\":\"ok\",\"messages\":[{...}]}" }
+          ]
+        },
+        {
+          "name": "Get Message Templates",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "x-access-token", "value": "{{TOKEN}}" }
+            ],
+            "url": "{{BASE_URL}}/api/messages/templates",
+            "description": "Retrieve all message templates. Controller: message.controller.getTemplates."
+          },
+          "response": [
+            { "name": "Success", "status": "OK", "code": 200, "body": "{\"status\":\"ok\",\"templates\":[{...}]}" }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Profile",
+      "item": [
+        {
+          "name": "Get Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "x-access-token", "value": "{{TOKEN}}" }
+            ],
+            "url": "{{BASE_URL}}/api/profile",
+            "description": "Retrieve user profile. Controller: profile.controller.getProfile."
+          },
+          "response": [
+            { "name": "Success", "status": "OK", "code": 200, "body": "{\"status\":\"ok\",\"profile\":{...}}" }
+          ]
+        },
+        {
+          "name": "Edit Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "x-access-token", "value": "{{TOKEN}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"name\":\"John Updated\",\"email\":\"john.updated@example.com\",\"location\":\"Boston\",\"phone\":\"9876543210\"}"
+            },
+            "url": "{{BASE_URL}}/api/profile",
+            "description": "Update user profile. Controller: profile.controller.editProfile."
+          },
+          "response": [
+            { "name": "Success", "status": "OK", "code": 200, "body": "{\"status\":\"ok\",\"profile\":{...}}" }
+          ]
+        },
+        {
+          "name": "Change Password",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "x-access-token", "value": "{{TOKEN}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"currentPassword\":\"Password123\",\"newPassword\":\"NewPassword123\"}"
+            },
+            "url": "{{BASE_URL}}/api/profile/password",
+            "description": "Change user password. Controller: profile.controller.changePassword."
+          },
+          "response": [
+            { "name": "Success", "status": "OK", "code": 200, "body": "{\"status\":\"ok\"}" },
+            { "name": "Error", "status": "Bad Request", "code": 400, "body": "{\"error\":\"Current password is incorrect\"}" }
+          ]
+        },
+        {
+          "name": "Update Payment Plan",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "x-access-token", "value": "{{TOKEN}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"paymentPlan\":\"premium\"}"
+            },
+            "url": "{{BASE_URL}}/api/profile/payment-plan",
+            "description": "Update user payment plan. Controller: profile.controller.updatePaymentPlan."
+          },
+          "response": [
+            { "name": "Success", "status": "OK", "code": 200, "body": "{\"status\":\"ok\"}" },
+            { "name": "Error", "status": "Bad Request", "code": 400, "body": "{\"error\":\"Invalid payment plan\"}" }
+          ]
+        },
+        {
+          "name": "Delete Profile",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "x-access-token", "value": "{{TOKEN}}" }
+            ],
+            "url": "{{BASE_URL}}/api/profile",
+            "description": "Delete user profile. Controller: profile.controller.deleteProfile."
+          },
+          "response": [
+            { "name": "Success", "status": "OK", "code": 200, "body": "{\"status\":\"ok\"}" }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    { "key": "BASE_URL", "value": "http://localhost:3000", "description": "Backend API base URL" },
+    { "key": "TOKEN", "value": "", "description": "JWT token from login/register" },
+    { "key": "PET_ID", "value": "", "description": "Pet ID from create/get pets" },
+    { "key": "VACCINE_ID", "value": "", "description": "Vaccine ID from create/get vaccines" },
+    { "key": "DOCUMENT_ID", "value": "", "description": "Document ID from create/get documents" },
+    { "key": "TIMELINE_ID", "value": "", "description": "Timeline point ID from create/get timeline" },
+    { "key": "TEAM_ID", "value": "", "description": "Team ID from create/get teams" }
+  ]
+}
