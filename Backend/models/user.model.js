@@ -10,7 +10,9 @@ const userSchema = new mongoose.Schema({
   phone: { type: String },
   paymentPlan: { type: String, enum: ['basic', 'premium', 'enterprise'], default: 'basic' },
   businessId: { type: mongoose.Schema.Types.ObjectId, ref: 'Business' },
-  qrCode: { type: String }
+  qrCode: { type: String },
+  isVerified: { type: Boolean, default: false },
+  verificationToken: { type: String }
 }, { timestamps: true });
 
 userSchema.pre('save', async function(next) {

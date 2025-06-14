@@ -5,7 +5,7 @@
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
-    {
+        {
       "name": "Auth",
       "item": [
         {
@@ -17,13 +17,13 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\"name\":\"John Doe\",\"email\":\"john@example.com\",\"password\":\"Password123\",\"role\":\"individual\",\"location\":\"New York\",\"phone\":\"1234567890\",\"inviteCode\":\"optional-invite-code-for-sub-user\"}"
+              "raw": "{\"name\":\"John Doe\",\"email\":\"john@example.com\",\"password\":\"Password123\",\"role\":\"individual\",\"location\":\"New York\",\"phone\":\"1234567890\",\"inviteCode\":\"optional-invite-code\"}"
             },
             "url": "{{BASE_URL}}/api/auth/register",
-            "description": "Register a new user (individual, admin, or sub-user). Controller: auth.controller.register. Returns JWT token."
+            "description": "Register a new user. Automatically sends verification email (2-hour expiry). Controller: auth.controller.register. User must verify email before login."
           },
           "response": [
-            { "name": "Success", "status": "OK", "code": 200, "body": "{\"status\":\"ok\",\"token\":\"<jwt-token>\"}" },
+            { "name": "Success", "status": "OK", "code": 200, "body": "{\"status\":\"ok\",\"token\":\"<jwt-token>\",\"message\":\"Please verify your email to log in\"}" },
             { "name": "Error", "status": "Bad Request", "code": 400, "body": "{\"error\":\"Invalid role\"}" }
           ]
         },
@@ -39,10 +39,11 @@
               "raw": "{\"email\":\"john@example.com\",\"password\":\"Password123\"}"
             },
             "url": "{{BASE_URL}}/api/auth/login",
-            "description": "Login user and get JWT token. Controller: auth.controller.login."
+            "description": "Login user (requires verified email). Returns JWT token. Controller: auth.controller.login."
           },
           "response": [
             { "name": "Success", "status": "OK", "code": 200, "body": "{\"status\":\"ok\",\"token\":\"<jwt-token>\"}" },
+            { "name": "Error", "status": "Forbidden", "code": 403, "body": "{\"error\":\"Email not verified\"}" },
             { "name": "Error", "status": "Unauthorized", "code": 401, "body": "{\"error\":\"Invalid credentials\"}" }
           ]
         },
@@ -62,11 +63,81 @@
           ]
         },
         {
+          "name": "Verify Email",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{BASE_URL}}/api/auth/verify-email?token={{VERIFICATION_TOKEN}}",
+            "description": "Verify user email with a 2-hour JWT token. Controller: auth.controller.verifyEmail."
+          },
+          "response": [
+            { "name": "Success", "status": "OK", "code": 200, "body": "{\"status\":\"ok\",\"message\":\"Email verified successfully\"}" },
+            { "name": "Error", "status": "Bad Request", "code": 400, "body": "{\"error\":\"Email already verified\"}" }
+          ]
+        },
+        {
+          "name": "Resend Verification Email",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\":\"john@example.com\"}"
+            },
+            "url": "{{BASE_URL}}/api/auth/resend-verification",
+            "description": "Resend verification email (2-minute cooldown). Controller: auth.controller.resendVerification."
+          },
+          "response": [
+            { "name": "Success", "status": "OK", "code": 200, "body": "{\"status\":\"ok\",\"message\":\"Verification email resent\"}" },
+            { "name": "Error", "status": "Too Many Requests", "code": 429, "body": "{\"error\":\"Please wait 2 minutes before resending\"}" }
+          ]
+        },
+        {
+          "name": "Request Password Reset",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"email\":\"john@example.com\"}"
+            },
+            "url": "{{BASE_URL}}/api/auth/password-reset",
+            "description": "Request a password reset link (2-hour expiry). Controller: auth.controller.requestPasswordReset."
+          },
+          "response": [
+            { "name": "Success", "status": "OK", "code": 200, "body": "{\"status\":\"ok\",\"message\":\"Password reset link sent\"}" },
+            { "name": "Error", "status": "Not Found", "code": 404, "body": "{\"error\":\"User not found\"}" }
+          ]
+        },
+        {
+          "name": "Verify Password Reset",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"token\":\"{{RESET_TOKEN}}\",\"newPassword\":\"NewPassword123\"}"
+            },
+            "url": "{{BASE_URL}}/api/auth/reset-password",
+            "description": "Reset password using a 2-hour JWT token. Controller: auth.controller.verifyPasswordReset."
+          },
+          "response": [
+            { "name": "Success", "status": "OK", "code": 200, "body": "{\"status\":\"ok\",\"message\":\"Password reset successfully\"}" },
+            { "name": "Error", "status": "Bad Request", "code": 400, "body": "{\"error\":\"Invalid or expired token\"}" }
+          ]
+        },
+        {
           "name": "Google OAuth",
           "request": {
             "method": "GET",
             "url": "{{BASE_URL}}/api/auth/google",
-            "description": "Initiate Google OAuth flow. Redirects to Google login page. Controller: passport.google."
+            "description": "Initiate Google OAuth flow. Redirects to Google login page."
           }
         },
         {
